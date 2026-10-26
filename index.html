@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sicurcant - Sicurezza in Cantiere</title>
+    <!-- Tailwind CSS per layout reattivo e stili -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome per Icone e Simboli Visivi -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Focus visivo accessibile */
+        button:focus, [tabindex="0"]:focus {
+            outline: 4px solid #f59e0b;
+            outline-offset: 2px;
+        }
+
+        /* Responsive Canvas / Card styles */
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .symbol-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animazioni di feedback */
+        @keyframes pulse-success {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-success {
+            animation: pulse-success 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen flex flex-col justify-between text-lg">
+
+    <!-- Header / Navbar Top -->
+    <header class="bg-amber-500 text-slate-900 p-4 shadow-md sticky top-0 z-50 border-b-4 border-amber-600">
+        <div class="max-w-4xl mx-auto flex justify-between items-center px-2">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-hard-hat text-3xl sm:text-4xl text-slate-900"></i>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wide uppercase">SICURCANT</h1>
+            </div>
+            <!-- Switch Modalità (Scopri / Sfida) -->
+            <nav class="flex space-x-2" aria-label="Navigazione principale">
+                <button id="btn-mode-scopri" onclick="switchMode('scopri')" class="px-4 py-2 rounded-xl font-bold bg-amber-100 text-amber-900 hover:bg-white transition flex items-center gap-2 border-2 border-amber-700 text-base sm:text-lg">
+                    <i class="fa-solid fa-book-open text-xl"></i>
+                    <span>SCOPRI</span>
+                </button>
+                <button id="btn-mode-sfida" onclick="switchMode('sfida')" class="px-4 py-2 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition flex items-center gap-2 border-2 border-slate-900 text-base sm:text-lg">
+                    <i class="fa-solid fa-trophy text-xl text-amber-400"></i>
+                    <span>SFIDA</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl w-full mx-auto p-4 sm:p-6 flex-grow">
+
+        <!-- ================= SEZIONE SCOPRI (SCHEDE DEI CONCETTI) ================= -->
+        <section id="section-scopri" class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl border-4 border-amber-300 shadow-sm text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold text-amber-900 mb-2 flex justify-center items-center gap-3">
+                    <i class="fa-solid fa-magnifying-glass text-amber-600"></i>
+                    Impara i Concetti Chiave
+                </h2>
+                <p class="text-gray-700 text-base sm:text-lg">
+                    Leggi le 5 schede visive per capire le <strong>Cause</strong> e le <strong>Conseguenze</strong> degli incidenti in cantiere.
+                </p>
+            </div>
+
+            <!-- Tab Navigation Schede -->
+            <div class="grid grid-cols-5 gap-2 sm:gap-3" id="cards-nav">
+                <!-- Generato via JS -->
+            </div>
+
+            <!-- Display Scheda Attiva -->
+            <div id="card-display" class="bg-white p-6 sm:p-8 rounded-3xl border-4 border-slate-200 card-shadow transition-all">
+                <!-- Contenuto dinamico scheda -->
+            </div>
+        </section>
+
+        <!-- ================= SEZIONE SFIDA (ESCAPE ROOM) ================= -->
+        <section id="section-sfida" class="hidden space-y-6">
+            
+            <!-- Barra di Progresso Escape Room -->
+            <div class="bg-white p-4 rounded-2xl border-2 border-slate-300 card-shadow">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-extrabold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-door-open text-amber-600"></i>
+                        Avanzamento Cantiere (Escape Room)
+                    </span>
+                    <span id="progress-text" class="font-bold text-amber-600">Prova 1 di 10</span>
+                </div>
+                <div class="w-full bg-slate-200 h-6 rounded-full overflow-hidden border border-slate-300">
+                    <div id="progress-bar" class="bg-amber-500 h-full transition-all duration-500 rounded-full" style="width: 10%;"></div>
+                </div>
+            </div>
+
+            <!-- Contenitore della Prova Attuale -->
+            <div id="challenge-container" class="bg-white p-6 sm:p-8 rounded-3xl border-4 border-slate-300 card-shadow">
+                <!-- Contenuto dinamico prova -->
+            </div>
+
+            <!-- Modal/Box Feedback Ripasso / Suggerimento -->
+            <div id="feedback-box" class="hidden p-6 rounded-2xl border-4 transition-all">
+                <div class="flex items-start gap-4">
+                    <div id="feedback-icon" class="text-4xl"></div>
+                    <div class="flex-1">
+                        <h3 id="feedback-title" class="text-2xl font-bold mb-2"></h3>
+                        <p id="feedback-msg" class="text-lg text-gray-800 mb-4"></p>
+                        <div id="feedback-actions" class="flex flex-wrap gap-3">
+                            <!-- Bottone per tornare alla scheda o riprovare -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sezione finale / Riepilogo -->
+            <div id="completion-box" class="hidden bg-emerald-100 border-4 border-emerald-500 p-8 rounded-3xl text-center space-y-6">
+                <div class="text-6xl text-emerald-600">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold text-emerald-900">CANTIERE SICURO! MISSIONE COMPIUTA!</h2>
+                <p class="text-xl text-emerald-800">
+                    Hai superato tutte le 10 prove. Ora sai riconoscere le CAUSE e le CONSEGUENZE dei rischi in cantiere!
+                </p>
+                <div id="summary-review" class="bg-white p-4 rounded-xl border border-emerald-300 text-left space-y-2">
+                    <h3 class="font-bold text-lg text-slate-800 border-b pb-2">Riepilogo delle competenze acquisite:</h3>
+                    <ul class="list-disc pl-6 space-y-1 text-base text-slate-700">
+                        <li><strong>DPI:</strong> Prevengono infortuni gravissimi.</li>
+                        <li><strong>Ponteggi:</strong> Devono avere ancoraggi e parapetti solidi.</li>
+                        <li><strong>Ordine:</strong> Riduce del 90% i rischi d'inciampo.</li>
+                        <li><strong>Segnaletica:</strong> Previene accessi in zone pericolose.</li>
+                        <li><strong>Elettricità:</strong> Cavi integri prevengono scosse ed incendi.</li>
+                    </ul>
+                </div>
+                <button onclick="restartChallenge()" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xl shadow-lg transition flex items-center justify-center gap-3 mx-auto">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    Ricomincia la Sfida
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-300 p-4 text-center text-sm border-t-4 border-slate-900 mt-8">
+        <p class="font-bold">Sicurcant - App Didattica Inclusiva per Classi CAT (Sicurezza in Cantiere)</p>
+        <p class="text-xs text-slate-400 mt-1">Simboli e colori ad alta accessibilità | Senza tracciamento dati</p>
+    </footer>
+
+    <!-- LOGICA JAVASCRIPT INTEGRATA -->
+    <script>
+        /* ==================== DATI DELL'APPLICAZIONE ==================== */
+
+        // 1. SCHEDE DI SCOPRI (5 Schede chiave con Focus Cause/Conseguenze + Immagini Iconografiche)
+        const schedeScopri = [
+            {
+                id: 1,
+                title: "1. Casco e DPI",
+                icon: "fa-hard-hat",
+                color: "text-amber-500",
+                bgColor: "bg-amber-100",
+                borderColor: "border-amber-400",
+                cause: "CAUSA: Non indossare il casco o le scarpe antinfortunistiche.",
+                conseguenza: "CONSEGUENZA: Trauma cranico per caduta oggetti o ferite ai piedi.",
+                prevenzione: "PREVENZIONE: Indossare sempre i DPI prima di entrare nel cantiere.",
+                imageIcon: "fa-person-falling-burst",
+                simpleText: "Senza casco (CAUSA) ➔ Oggetto cade in testa (CONSEGUENZA).",
+                htmlCausa: `<div class="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center shadow-inner mb-3 overflow-hidden border border-slate-300 relative group">
+                                <!-- Immagine con fallback ad illustrazione SVG integrata -->
+                                <img src="image_78d3a9.jpg" alt="Operaio che cade da una scala perdendo il casco" class="w-full h-full object-cover relative z-10" onerror="this.style.display='none'; document.getElementById('svg-fallback-1').classList.remove('hidden');">
+                                
+                                <!-- Grafica Vettoriale di Fallback (Sempre Visibile in Anteprima) -->
+                                <div id="svg-fallback-1" class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-sky-100 to-amber-50 p-2 relative overflow-hidden">
+                                    <svg viewBox="0 0 200 160" class="w-full h-full max-h-44">
+                                        <!-- Parete d'involucro cantiere -->
+                                        <rect x="10" y="10" width="180" height="140" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2" />
+                                        <line x1="10" y1="40" x2="190" y2="40" stroke="#e2e8f0" stroke-width="2" />
+                                        <line x1="10" y1="80" x2="190" y2="80" stroke="#e2e8f0" stroke-width="2" />
+                                        <line x1="10" y1="120" x2="190" y2="120" stroke="#e2e8f0" stroke-width="2" />
+                                        
+                                        <!-- Scala in metallo di sbieco -->
+                                        <line x1="25" y1="150" x2="65" y2="10" stroke="#64748b" stroke-width="5" />
+                                        <line x1="40" y1="150" x2="80" y2="10" stroke="#64748b" stroke-width="5" />
+                                        <line x1="30" y1="130" x2="45" y2="130" stroke="#64748b" stroke-width="3" />
+                                        <line x1="35" y1="100" x2="50" y2="100" stroke="#64748b" stroke-width="3" />
+                                        <line x1="42" y1="70" x2="57" y2="70" stroke="#64748b" stroke-width="3" />
+                                        <line x1="48" y1="40" x2="63" y2="40" stroke="#64748b" stroke-width="3" />
+
+                                        <!-- Operaio che cade sbilanciato -->
+                                        <g transform="translate(100, 50) rotate(25)">
+                                            <!-- Busto (Camicia a quadri giallo/nera) -->
+                                            <rect x="-15" y="-10" width="30" height="40" rx="5" fill="#f59e0b" />
+                                            <line x1="-15" y1="5" x2="15" y2="5" stroke="#78350f" stroke-width="2" />
+                                            <line x1="0" y1="-10" x2="0" y2="30" stroke="#78350f" stroke-width="2" />
+                                            <!-- Pantaloni scuri -->
+                                            <rect x="-13" y="30" width="11" height="35" rx="3" fill="#334155" />
+                                            <rect x="2" y="30" width="11" height="35" rx="3" fill="#334155" transform="rotate(-20 2 30)" />
+                                            <!-- Scarpe -->
+                                            <rect x="-16" y="62" width="16" height="10" rx="3" fill="#78350f" />
+                                            <rect x="10" y="58" width="16" height="10" rx="3" fill="#78350f" transform="rotate(-20 10 58)" />
+                                            <!-- Braccia aperte in caduta -->
+                                            <line x1="-15" y1="-5" x2="-35" y2="-25" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" />
+                                            <line x1="15" y1="-5" x2="35" y2="-30" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" />
+                                            <!-- Testa -->
+                                            <circle cx="0" cy="-22" r="12" fill="#fed7aa" />
+                                        </g>
+
+                                        <!-- Casco Giallo che vola via -->
+                                        <g transform="translate(155, 30) rotate(-40)">
+                                            <path d="M-12 0 A 12 12 0 0 1 12 0 Z" fill="#eab308" stroke="#ca8a04" stroke-width="2" />
+                                            <rect x="-15" y="0" width="30" height="4" rx="1" fill="#ca8a04" />
+                                            <!-- Scintille / Linee di movimento -->
+                                            <line x1="-20" y1="-10" x2="-15" y2="-5" stroke="#ef4444" stroke-width="2" />
+                                            <line x1="0" y1="-20" x2="0" y2="-15" stroke="#ef4444" stroke-width="2" />
+                                        </g>
+                                    </svg>
+                                    <span class="text-xs font-bold text-slate-600 mt-1">CADUTA DA SCALA SENZA PROTEZIONI</span>
+                                </div>
+                            </div>`,
+                htmlConseguenza: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-crutch text-7xl text-orange-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">TRAUMA E LESIONI</span>
+                                </div>`,
+                htmlPrevenzione: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-user-shield text-7xl text-emerald-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">DPI E CASCO INDOSSATI</span>
+                                </div>`
+            },
+            {
+                id: 2,
+                title: "2. Cadute dall'alto",
+                icon: "fa-building-hazard",
+                color: "text-red-500",
+                bgColor: "bg-red-100",
+                borderColor: "border-red-400",
+                cause: "CAUSA: Ponteggio senza parapetto o imbracatura non allacciata.",
+                conseguenza: "CONSEGUENZA: Caduta dall'alto con lesioni gravi o morte.",
+                prevenzione: "PREVENZIONE: Montare parapetti standard ed usare imbracature certificate.",
+                imageIcon: "fa-person-falling",
+                simpleText: "Manca il parapetto (CAUSA) ➔ Caduta dal ponteggio (CONSEGUENZA).",
+                htmlCausa: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                <i class="fa-solid fa-building-circle-exclamation text-7xl text-red-500 mb-2"></i>
+                                <span class="text-xs font-bold text-slate-500">PONTEGGIO INCOMPLETO</span>
+                            </div>`,
+                htmlConseguenza: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-person-falling text-7xl text-orange-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">CADUTA DALL'ALTO</span>
+                                </div>`,
+                htmlPrevenzione: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-person-arrow-up-from-line text-7xl text-emerald-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">PARAPETTI E IMBRACATURA</span>
+                                </div>`
+            },
+            {
+                id: 3,
+                title: "3. Ordine e Pulizia",
+                icon: "fa-broom",
+                color: "text-blue-500",
+                bgColor: "bg-blue-100",
+                borderColor: "border-blue-400",
+                cause: "CAUSA: Chiodi sporgenti, assi sparse o cavi a terra.",
+                conseguenza: "CONSEGUENZA: Inciampo, scivolamento, ferite da taglio o perforazione.",
+                prevenzione: "PREVENZIONE: Piegare i chiodi, liberare i passaggi e raccogliere i calcinacci.",
+                imageIcon: "fa-person-walking-with-cane",
+                simpleText: "Attrezzi in mezzo al passaggio (CAUSA) ➔ Inciampo e caduta (CONSEGUENZA).",
+                htmlCausa: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                <i class="fa-solid fa-boxes-stacked text-7xl text-red-500 mb-2"></i>
+                                <span class="text-xs font-bold text-slate-500">OSTACOLI E DISORDINE</span>
+                            </div>`,
+                htmlConseguenza: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-person-falling-burst text-7xl text-orange-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">INCIAMPO E FERITE</span>
+                                </div>`,
+                htmlPrevenzione: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-broom text-7xl text-emerald-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">PASSAGGI SGOMBRI</span>
+                                </div>`
+            },
+            {
+                id: 4,
+                title: "4. Rischio Elettrico",
+                icon: "fa-bolt",
+                color: "text-yellow-500",
+                bgColor: "bg-yellow-100",
+                borderColor: "border-yellow-400",
+                cause: "CAUSA: Cavi elettrici scoperti, spelati o contatto con acqua.",
+                conseguenza: "CONSEGUENZA: Elettrocuzione (scossa elettrica) o incendi.",
+                prevenzione: "PREVENZIONE: Usare quadri elettrici da cantiere a norma ed attrezzi isolati.",
+                imageIcon: "fa-plug-circle-exclamation",
+                simpleText: "Cavo elettrico rotto (CAUSA) ➔ Scossa elettrica / Elettrocuzione (CONSEGUENZA).",
+                htmlCausa: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                <i class="fa-solid fa-plug-circle-xmark text-7xl text-red-500 mb-2"></i>
+                                <span class="text-xs font-bold text-slate-500">CAVO GUASTO O DISCOPERTO</span>
+                            </div>`,
+                htmlConseguenza: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-bolt-lightning text-7xl text-orange-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">ELETTROCUZIONE / SCOSSA</span>
+                                </div>`,
+                htmlPrevenzione: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-plug-circle-check text-7xl text-emerald-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">QUADRI E CAVI A NORMA</span>
+                                </div>`
+            },
+            {
+                id: 5,
+                title: "5. Segnaletica",
+                icon: "fa-triangle-exclamation",
+                color: "text-orange-500",
+                bgColor: "bg-orange-100",
+                borderColor: "border-orange-400",
+                cause: "CAUSA: Assenza di cartelli di pericolo o recinzione del cantiere.",
+                conseguenza: "CONSEGUENZA: Ingresso di persone non autorizzate e scavi scoperti.",
+                prevenzione: "PREVENZIONE: Esporre cartelli visibili e recintare la zona di lavoro.",
+                imageIcon: "fa-signs-post",
+                simpleText: "Nessun cartello di avviso (CAUSA) ➔ Entrare in zona pericolosa (CONSEGUENZA).",
+                htmlCausa: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                <i class="fa-solid fa-eye-slash text-7xl text-red-500 mb-2"></i>
+                                <span class="text-xs font-bold text-slate-500">SENZA SEGNALETICA</span>
+                            </div>`,
+                htmlConseguenza: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-person-walking-dashed-line-arrow-right text-7xl text-orange-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">ACCESSO IN ZONA PERICOLOSA</span>
+                                </div>`,
+                htmlPrevenzione: `<div class="w-full h-48 bg-white rounded-xl flex flex-col items-center justify-center shadow-sm mb-3 border border-slate-200">
+                                    <i class="fa-solid fa-signs-post text-7xl text-emerald-500 mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-500">CARTELLI E RECINZIONI</span>
+                                </div>`
+            }
+        ];
+
+        // 2. PROVE SFIDA (10 Prove a difficoltà crescente su Cause/Conseguenze)
+        const proveSfida = [
+            {
+                id: 1,
+                schedaRiferimento: 1,
+                title: "Prova 1: Trova la Causa",
+                instruction: "Un operaio ha subito una ferita al piede a causa di un chiodo sporgente.",
+                question: "Qual è stata la CAUSA principale di questo infortunio?",
+                type: "single-choice",
+                options: [
+                    { text: "Non indossava scarpe antinfortunistiche con lamina anti-perforazione", icon: "fa-shoe-prints", correct: true },
+                    { text: "Indossava il casco protettivo rigido", icon: "fa-hard-hat", correct: false },
+                    { text: "Il cantiere era chiuso il giorno festivo", icon: "fa-door-closed", correct: false }
+                ],
+                explanation: "Non indossare le scarpe antinfortunistiche corrette è la causa diretta che permette ai chiodi di penetrare la suola."
+            },
+            {
+                id: 2,
+                schedaRiferimento: 2,
+                title: "Prova 2: Abbina Evento e Conseguenza",
+                instruction: "Un operaio lavora su un ponteggio a 5 metri d'altezza senza cinture di sicurezza.",
+                question: "Qual è la CONSEGUENZA più probabile e pericolosa di questa situazione?",
+                type: "single-choice",
+                options: [
+                    { text: "Migliore velocità nel finire il lavoro", icon: "fa-bolt", correct: false },
+                    { text: "Caduta dall'alto con gravi lesioni o morte", icon: "fa-person-falling", correct: true },
+                    { text: "Un improvviso forte temporale in estate", icon: "fa-cloud-rain", correct: false }
+                ],
+                explanation: "Lavorare in quota senza imbracatura o parapetti ha come immediata conseguenza il rischio di caduta dall'alto."
+            },
+            {
+                id: 3,
+                schedaRiferimento: 3,
+                title: "Prova 3: Classifica la Frase",
+                instruction: "Frase: 'Disordine sui camminamenti con assi e mattoni sparsi'.",
+                question: "Questo fatto rappresenta una CAUSA o una CONSEGUENZA?",
+                type: "single-choice",
+                options: [
+                    { text: "È una CAUSA che può provocare un inciampo", icon: "fa-circle-exclamation", correct: true },
+                    { text: "È una CONSEGUENZA di un allenamento sportivo", icon: "fa-medal", correct: false }
+                ],
+                explanation: "Il disordine è l'origine (CAUSA) che genera l'incidente (inciampo o caduta)."
+            },
+            {
+                id: 4,
+                schedaRiferimento: 4,
+                title: "Prova 4: Relazione di Causa-Effetto Elettrico",
+                instruction: "Un cavo elettrico con la guaina rotta toccava una pozza d'acqua. Un lavoratore ha preso la scossa.",
+                question: "Qual è la CAUSA e qual è la CONSEGUENZA?",
+                type: "single-choice",
+                options: [
+                    { text: "CAUSA: La scossa | CONSEGUENZA: Il cavo rotto", icon: "fa-xmark", correct: false },
+                    { text: "CAUSA: Il cavo rotta nell'acqua | CONSEGUENZA: La scossa elettrica", icon: "fa-check", correct: true },
+                    { text: "CAUSA: L'uso del casco | CONSEGUENZA: Il cavo spezzato", icon: "fa-xmark", correct: false }
+                ],
+                explanation: "Il guasto al cavo (CAUSA) genera il passaggio di corrente nel corpo dell'operaio (CONSEGUENZA)."
+            },
+            {
+                id: 5,
+                schedaRiferimento: 5,
+                title: "Prova 5: Sequenza Temporale di Prevenzione",
+                instruction: "Metti nell'ordine temporale corretto le tre azioni:",
+                type: "ordering",
+                steps: [
+                    { id: "A", text: "1° Indossare i DPI (casco, scarpe, guanti)", icon: "fa-user-shield" },
+                    { id: "B", text: "2° Entrare nella zona di lavoro del cantiere", icon: "fa-person-walking-arrow-right" },
+                    { id: "C", text: "3° Iniziare la movimentazione dei carichi", icon: "fa-boxes-packing" }
+                ],
+                correctOrder: ["A", "B", "C"],
+                explanation: "Prima si indossano le protezioni (DPI), poi si accede alla zona operativa e solo dopo si avviano le lavorazioni."
+            },
+            {
+                id: 6,
+                schedaRiferimento: 1,
+                title: "Prova 6: Oggetto in caduta libera",
+                instruction: "Dall'alto di una struttura cade un mattone. L'operaio sotto rimane illeso perché indossava il casco rigido.",
+                question: "Quale frase spiega correttamente la relazione?",
+                type: "single-choice",
+                options: [
+                    { text: "L'uso del casco (Prevenzione) ha impedito che la caduta del mattone (Causa) causasse lesioni (Conseguenza)", icon: "fa-shield-halved", correct: true },
+                    { text: "Il mattone è caduto perché l'operaio indossava il casco rigido", icon: "fa-xmark", correct: false },
+                    { text: "Non c'è nessuna relazione tra il casco e la testa dell'operaio", icon: "fa-xmark", correct: false }
+                ],
+                explanation: "I DPI interrompono la catena che trasforma una causa di pericolo in una conseguenza dannosa."
+            },
+            {
+                id: 7,
+                schedaRiferimento: 5,
+                title: "Prova 7: Cartelli e Segnaletica",
+                instruction: "Un passante è entrato in una zona con scavo aperto perché mancava la recinzione.",
+                question: "Qual è la CAUSA che ha reso possibile l'incidente?",
+                type: "single-choice",
+                options: [
+                    { text: "Mancanza di recinzione e cartelli di divieto d'accesso", icon: "fa-triangle-exclamation", correct: true },
+                    { text: "Il passante indossava occhiali da sole scuri", icon: "fa-glasses", correct: false },
+                    { text: "La presenza di troppi cartelli colorati", icon: "fa-signs-post", correct: false }
+                ],
+                explanation: "La mancanza di barriere e segnaletica è la causa che permette l'accesso in zone pericolose."
+            },
+            {
+                id: 8,
+                schedaRiferimento: 3,
+                title: "Prova 8: Riordino Sequenza di Sicurezza",
+                instruction: "Ordina le azioni per mettere in sicurezza un passaggio ingombrato:",
+                type: "ordering",
+                steps: [
+                    { id: "A", text: "Avvistare tavole con chiodi sul passaggio", icon: "fa-eye" },
+                    { id: "B", text: "Rimuovere le tavole e pulire l'area", icon: "fa-broom" },
+                    { id: "C", text: "Camminare in sicurezza nel passaggio pulito", icon: "fa-person-walking" }
+                ],
+                correctOrder: ["A", "B", "C"],
+                explanation: "Riconoscere il pericolo (A), eliminare la causa (B) e poi transitare in sicurezza (C)."
+            },
+            {
+                id: 9,
+                schedaRiferimento: 2,
+                title: "Prova 9: Ponteggio ed Ancoraggio",
+                instruction: "Durante una raffica di vento, una parte di ponteggio instabile è crollata.",
+                question: "Qual era la CAUSA principale del crollo?",
+                type: "single-choice",
+                options: [
+                    { text: "Mancato ancoraggio e fissaggio corretto della struttura al muro", icon: "fa-anchor-lock", correct: true },
+                    { text: "Il colore della pittura del ponteggio", icon: "fa-paint-roller", correct: false },
+                    { text: "L'ora di pausa pranzo degli operai", icon: "fa-utensils", correct: false }
+                ],
+                explanation: "I ponteggi crollano per la mancanza di opportuni ancoraggi strutturali (causa)."
+            },
+            {
+                id: 10,
+                schedaRiferimento: 4,
+                title: "Prova 10: Sfida Finale di Analisi",
+                instruction: "Analizza questa situazione: 'Lavoratore usa una smerigliatrice con cavo elettrico sfilacciato senza occhiali protettivi'.",
+                question: "Quali sono le DUE possibili CONSEGUENZE gravi?",
+                type: "single-choice",
+                options: [
+                    { text: "Scossa elettrica + Schegge negli occhi", icon: "fa-triangle-exclamation", correct: true },
+                    { text: "Piede schiacciato + Caduta da 10 metri", icon: "fa-xmark", correct: false },
+                    { text: "Miglioramento della vista + Guanti puliti", icon: "fa-xmark", correct: false }
+                ],
+                explanation: "Il cavo sfilacciato causa elettrocuzione; l'assenza di occhiali espone gli occhi alle schegge proiettate."
+            }
+        ];
+
+        /* ==================== STATO DELL'APPLICAZIONE ==================== */
+        let currentMode = 'scopri'; // 'scopri' | 'sfida'
+        let currentCardIndex = 0;
+        let currentChallengeIndex = 0;
+        let userOrderingState = [];
+
+        /* ==================== INIZIALIZZAZIONE ==================== */
+        window.onload = function() {
+            renderScopriNav();
+            renderScheda(currentCardIndex);
+            renderChallenge(currentChallengeIndex);
+        };
+
+        /* ==================== LOGICA MODALITÀ (SCOPRI / SFIDA) ==================== */
+        function switchMode(mode) {
+            currentMode = mode;
+            const secScopri = document.getElementById('section-scopri');
+            const secSfida = document.getElementById('section-sfida');
+            const btnScopri = document.getElementById('btn-mode-scopri');
+            const btnSfida = document.getElementById('btn-mode-sfida');
+
+            if (mode === 'scopri') {
+                secScopri.classList.remove('hidden');
+                secSfida.classList.add('hidden');
+                btnScopri.className = "px-4 py-2 rounded-xl font-bold bg-amber-500 text-slate-900 shadow-md ring-4 ring-amber-300 transition flex items-center gap-2 border-2 border-amber-700 text-base sm:text-lg";
+                btnSfida.className = "px-4 py-2 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition flex items-center gap-2 border-2 border-slate-900 text-base sm:text-lg";
+            } else {
+                secScopri.classList.add('hidden');
+                secSfida.classList.remove('hidden');
+                btnSfida.className = "px-4 py-2 rounded-xl font-bold bg-amber-500 text-slate-900 shadow-md ring-4 ring-amber-300 transition flex items-center gap-2 border-2 border-amber-700 text-base sm:text-lg";
+                btnScopri.className = "px-4 py-2 rounded-xl font-bold bg-slate-100 text-slate-700 hover:bg-white transition flex items-center gap-2 border-2 border-slate-300 text-base sm:text-lg";
+            }
+        }
+
+        /* ==================== RENDERING SCOPRI ==================== */
+        function renderScopriNav() {
+            const nav = document.getElementById('cards-nav');
+            nav.innerHTML = '';
+            schedeScopri.forEach((scheda, idx) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    currentCardIndex = idx;
+                    renderScheda(idx);
+                };
+                btn.className = `p-3 rounded-2xl border-4 font-bold flex flex-col items-center justify-center transition-all ${
+                    idx === currentCardIndex 
+                    ? `${scheda.bgColor} ${scheda.borderColor} shadow-md scale-105` 
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`;
+                btn.innerHTML = `
+                    <i class="fa-solid ${scheda.icon} text-2xl sm:text-3xl ${scheda.color} mb-1"></i>
+                    <span class="text-xs sm:text-sm text-center line-clamp-1">${scheda.title.split('.')[1]}</span>
+                `;
+                nav.appendChild(btn);
+            });
+        }
+
+        function renderScheda(index) {
+            currentCardIndex = index;
+            renderScopriNav();
+            const s = schedeScopri[index];
+            const display = document.getElementById('card-display');
+            
+            display.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Titolo Scheda -->
+                    <div class="flex items-center gap-4 pb-4 border-b-2 border-slate-200">
+                        <div class="p-4 ${s.bgColor} rounded-2xl border-2 ${s.borderColor}">
+                            <i class="fa-solid ${s.icon} text-4xl sm:text-5xl ${s.color}"></i>
+                        </div>
+                        <div>
+                            <span class="text-sm font-bold uppercase tracking-wider text-slate-500">Scheda Concetto Concettuale</span>
+                            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800">${s.title}</h3>
+                        </div>
+                    </div>
+
+                    <!-- Rappresentazione Visiva Semplificata -->
+                    <div class="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex items-center gap-4">
+                        <i class="fa-solid ${s.imageIcon} text-4xl text-amber-600"></i>
+                        <p class="font-bold text-amber-900 text-lg sm:text-xl">
+                            ${s.simpleText}
+                        </p>
+                    </div>
+
+                    <!-- Dettagli Causa / Conseguenza / Prevenzione con Immagini Grafiche Composte -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-red-50 border-2 border-red-200 p-4 rounded-xl flex flex-col">
+                            <span class="font-bold text-red-700 block mb-3 text-sm uppercase">
+                                <i class="fa-solid fa-circle-xmark mr-1"></i> CAUSA (L'errore)
+                            </span>
+                            ${s.htmlCausa}
+                            <p class="text-slate-800 font-semibold text-base flex-1">${s.cause}</p>
+                        </div>
+                        <div class="bg-orange-50 border-2 border-orange-200 p-4 rounded-xl flex flex-col">
+                            <span class="font-bold text-orange-700 block mb-3 text-sm uppercase">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> CONSEGUENZA (L'infortunio)
+                            </span>
+                            ${s.htmlConseguenza}
+                            <p class="text-slate-800 font-semibold text-base flex-1">${s.conseguenza}</p>
+                        </div>
+                        <div class="bg-emerald-50 border-2 border-emerald-200 p-4 rounded-xl flex flex-col">
+                            <span class="font-bold text-emerald-700 block mb-3 text-sm uppercase">
+                                <i class="fa-solid fa-circle-check mr-1"></i> PREVENZIONE (Soluzione)
+                            </span>
+                            ${s.htmlPrevenzione}
+                            <p class="text-slate-800 font-semibold text-base flex-1">${s.prevenzione}</p>
+                        </div>
+                    </div>
+
+                    <!-- Pulsanti Navigazione Schede -->
+                    <div class="flex justify-between items-center pt-4 border-t-2 border-slate-100">
+                        <button onclick="prevScheda()" ${index === 0 ? 'disabled class="opacity-40 cursor-not-allowed text-slate-400 font-bold px-4 py-2"' : 'class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-xl transition"'}>
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Precedente
+                        </button>
+                        <button onclick="switchMode('sfida')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold px-6 py-3 rounded-xl shadow-md transition flex items-center gap-2">
+                            <span>VAI ALLA SFIDA</span>
+                            <i class="fa-solid fa-trophy"></i>
+                        </button>
+                        <button onclick="nextScheda()" ${index === schedeScopri.length - 1 ? 'disabled class="opacity-40 cursor-not-allowed text-slate-400 font-bold px-4 py-2"' : 'class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-xl transition"'}>
+                            Successiva <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function prevScheda() {
+            if (currentCardIndex > 0) {
+                renderScheda(currentCardIndex - 1);
+            }
+        }
+
+        function nextScheda() {
+            if (currentCardIndex < schedeScopri.length - 1) {
+                renderScheda(currentCardIndex + 1);
+            }
+        }
+
+        function goToScheda(schedaId) {
+            const index = schedeScopri.findIndex(s => s.id === schedaId);
+            if (index !== -1) {
+                switchMode('scopri');
+                renderScheda(index);
+            }
+        }
+
+        /* ==================== LOGICA SFIDA / ESCAPE ROOM ==================== */
+        function renderChallenge(index) {
+            currentChallengeIndex = index;
+            hideFeedback();
+
+            // Aggiorna la barra di progresso
+            const percent = ((index + 1) / proveSfida.length) * 100;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `Prova ${index + 1} di ${proveSfida.length}`;
+
+            const challenge = proveSfida[index];
+            const container = document.getElementById('challenge-container');
+
+            if (challenge.type === 'single-choice') {
+                let optionsHTML = '';
+                challenge.options.forEach((opt, optIdx) => {
+                    optionsHTML += `
+                        <button onclick="checkSingleChoice(${optIdx})" class="w-full text-left p-4 sm:p-5 rounded-2xl border-4 border-slate-200 hover:border-amber-400 hover:bg-amber-50 transition flex items-center gap-4 group focus:ring-4 focus:ring-amber-300">
+                            <div class="p-3 bg-slate-100 group-hover:bg-amber-200 rounded-xl border border-slate-300 text-slate-700 text-2xl">
+                                <i class="fa-solid ${opt.icon}"></i>
+                            </div>
+                            <span class="text-lg sm:text-xl font-bold text-slate-800 flex-1">${opt.text}</span>
+                            <i class="fa-solid fa-chevron-right text-slate-400 group-hover:text-amber-600 text-xl"></i>
+                        </button>
+                    `;
+                });
+
+                container.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-3 text-amber-700 font-extrabold text-sm uppercase tracking-wide">
+                            <i class="fa-solid fa-lock text-lg"></i>
+                            <span>${challenge.title}</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 text-slate-800 font-semibold text-lg">
+                            <i class="fa-solid fa-circle-info text-amber-600 mr-2"></i> ${challenge.instruction}
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900">${challenge.question}</h3>
+                        <div class="space-y-3">
+                            ${optionsHTML}
+                        </div>
+                    </div>
+                `;
+            } else if (challenge.type === 'ordering') {
+                userOrderingState = [...challenge.steps]; // reset stato oridinamento
+                renderOrderingChallenge();
+            }
+        }
+
+        function renderOrderingChallenge() {
+            const challenge = proveSfida[currentChallengeIndex];
+            const container = document.getElementById('challenge-container');
+
+            let stepsHTML = '';
+            userOrderingState.forEach((step, idx) => {
+                stepsHTML += `
+                    <div class="p-4 bg-slate-50 border-3 border-slate-300 rounded-2xl flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-amber-500 text-slate-900 font-black flex items-center justify-center text-lg">
+                                ${idx + 1}
+                            </span>
+                            <i class="fa-solid ${step.icon} text-amber-600 text-2xl"></i>
+                            <span class="font-bold text-slate-800 text-lg sm:text-xl">${step.text}</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="moveStep(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 p-2"' : 'class="p-2 bg-slate-200 hover:bg-amber-300 rounded-lg font-bold text-lg"'}>
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                            <button onclick="moveStep(${idx}, 1)" ${idx === userOrderingState.length - 1 ? 'disabled class="opacity-30 p-2"' : 'class="p-2 bg-slate-200 hover:bg-amber-300 rounded-lg font-bold text-lg"'}>
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3 text-amber-700 font-extrabold text-sm uppercase tracking-wide">
+                        <i class="fa-solid fa-arrow-down-short-wide text-lg"></i>
+                        <span>${challenge.title}</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 text-slate-800 font-semibold text-lg">
+                        <i class="fa-solid fa-hand-pointer text-amber-600 mr-2"></i> ${challenge.instruction}
+                    </div>
+                    <div class="space-y-3">
+                        ${stepsHTML}
+                    </div>
+                    <button onclick="checkOrdering()" class="w-full py-4 bg-amber-500 hover:bg-amber-600 text-slate-900 font-black rounded-2xl text-xl shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-key"></i>
+                        CONFERMA SEQUENZA
+                    </button>
+                </div>
+            `;
+        }
+
+        function moveStep(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < userOrderingState.length) {
+                const temp = userOrderingState[index];
+                userOrderingState[index] = userOrderingState[newIndex];
+                userOrderingState[newIndex] = temp;
+                renderOrderingChallenge();
+            }
+        }
+
+        /* ==================== VERIFICA RISPOSTE E FEEDBACK ==================== */
+        function checkSingleChoice(optionIndex) {
+            const challenge = proveSfida[currentChallengeIndex];
+            const selected = challenge.options[optionIndex];
+
+            if (selected.correct) {
+                showFeedback(true, challenge);
+            } else {
+                showFeedback(false, challenge);
+            }
+        }
+
+        function checkOrdering() {
+            const challenge = proveSfida[currentChallengeIndex];
+            const isCorrect = userOrderingState.every((step, idx) => step.id === challenge.correctOrder[idx]);
+
+            if (isCorrect) {
+                showFeedback(true, challenge);
+            } else {
+                showFeedback(false, challenge);
+            }
+        }
+
+        function showFeedback(isCorrect, challenge) {
+            const box = document.getElementById('feedback-box');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const msg = document.getElementById('feedback-msg');
+            const actions = document.getElementById('feedback-actions');
+
+            box.classList.remove('hidden', 'bg-emerald-100', 'border-emerald-500', 'bg-red-100', 'border-red-500');
+
+            if (isCorrect) {
+                box.classList.add('bg-emerald-100', 'border-emerald-500', 'animate-success');
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
+                title.innerText = '✓ RISPOSTA CORRETTA!';
+                title.className = 'text-2xl font-black text-emerald-900 mb-1';
+                msg.innerHTML = `<strong>Spiegazione:</strong> ${challenge.explanation}`;
+
+                actions.innerHTML = `
+                    <button onclick="nextChallenge()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-lg">
+                        <span>PROSSIMA PROVA</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                `;
+            } else {
+                box.classList.add('bg-red-100', 'border-red-500');
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-600"></i>';
+                title.innerText = '✗ RISPOSTA ERRATA!';
+                title.className = 'text-2xl font-black text-red-900 mb-1';
+                msg.innerHTML = `
+                    <p class="mb-2"><strong>Suggerimento:</strong> Non hai ancora individuato la relazione corretta tra Causa ed Effetto.</p>
+                    <p class="text-sm text-slate-700">Rivedi i concetti sulla scheda dedicata per sbloccare la porta!</p>
+                `;
+
+                actions.innerHTML = `
+                    <button onclick="goToScheda(${challenge.schedaRiferimento})" class="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow-md transition flex items-center gap-2 text-base sm:text-lg">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>RIPASSA SCHEDA N. ${challenge.schedaRiferimento}</span>
+                    </button>
+                    <button onclick="hideFeedback()" class="px-5 py-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition flex items-center gap-2 text-base sm:text-lg">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>RIPROVA LA PROVA</span>
+                    </button>
+                `;
+            }
+
+            box.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback-box').classList.add('hidden');
+        }
+
+        function nextChallenge() {
+            if (currentChallengeIndex < proveSfida.length - 1) {
+                renderChallenge(currentChallengeIndex + 1);
+            } else {
+                // Completamento Escape Room
+                document.getElementById('challenge-container').classList.add('hidden');
+                document.getElementById('feedback-box').classList.add('hidden');
+                document.getElementById('completion-box').classList.remove('hidden');
+            }
+        }
+
+        function restartChallenge() {
+            document.getElementById('completion-box').classList.add('hidden');
+            document.getElementById('challenge-container').classList.remove('hidden');
+            renderChallenge(0);
+        }
+    </script>
+</body>
+</html>
